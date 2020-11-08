@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--namespace属性：名称空间， 写接口的全限定名-->
+<mapper namespace="com.itheima.health.dao.MenuDao">
+
+    <!--分页查询(页面初始化显示)-->
+    <select id="findByCondition" resultType="com.itheima.health.pojo.Menu">
+        select * from t_menu
+        <if test="value != null and value.length > 0">
+            where name like #{queryString} or priority like #{queryString}
+        </if>
+    </select>
+
+    <!--新增菜单-->
+    <insert id="add">
+        insert into t_menu (name, linkUrl, path, priority, icon, description, parentMenuId)
+        values (#{name}, #{linkUrl}, #{path}, #{priority}, #{icon}, #{description}, #{parentMenuId})
+    </insert>
+
+    <!--编辑弹窗回显菜单信息-->
+    <select id="findById" resultType="com.itheima.health.pojo.Menu">
+        select *
+        from t_menu
+        where id = #{id}
+    </select>
+
+    <!--编辑提交-->
+    <update id="update">
+        update t_menu
+        set name         = #{name},
+            linkUrl      = #{linkUrl},
+            path         = #{path},
+            priority     = #{priority},
+            icon         = #{icon},
+            description  = #{description},
+            parentMenuId = #{parentMenuId}
+        where id = #{id}
+    </update>
+
+    <!--判断菜单是否被角色所使用-->
+    <select id="findCountByRole" resultType="java.lang.Integer">
+        SELECT count(1)
+        FROM t_role_menu
+        WHERE menu_id = #{id}
+    </select>
+
+    <!--删除菜单-->
+    <delete id="deleteById">
+        delete
+        from t_menu
+        where id = #{id}
+    </delete>
+
+</mapper>

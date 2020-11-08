@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://code.alibabatech.com/schema/dubbo
+       http://code.alibabatech.com/schema/dubbo/dubbo.xsd
+       http://www.springframework.org/schema/task
+       http://www.springframework.org/schema/task/spring-task.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"
+>
+
+<!--注册zookeeper 应该名-->
+    <dubbo:application name="health_job"/>
+<!-- 注册中心在哪 -->
+    <dubbo:registry address="zookeeper://127.0.0.1:2181"/>
+<!-- dubbo扫包 -->
+    <dubbo:annotation package="com.itheima.health.job"/>
+    <dubbo:consumer check="false" timeout="60000"/>
+<!-- 注解支持   -->
+    <task:annotation-driven/>
+<!-- scheduler -->
+    <bean class="org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler"/>
+    <import resource="classpath:spring-redis.xml"/>
+    <import resource="classpath:spring-freemarker.xml"/>
+
+    <!--扫包-->
+    <context:component-scan base-package="com.itheima.health.job"/>
+    <!--策略1-->
+    <bean id="jobDetail1" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="cleanImgJob"/>
+        <property name="targetMethod" value="cleanImg"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <!--触发器1-->
+    <bean id="trigger1" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="cronExpression" value="0/2 * * * * ? "/>
+        <property name="jobDetail" ref="jobDetail1"/>
+    </bean>
+
+    <!--策略2-->
+    <bean id="jobDetail2" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="cleanOrderSettingJob"/>
+        <property name="targetMethod" value="cleanOrderSetting"/>
+        <property name="concurrent" value="false"/>
+    </bean>
+    <!--触发器2-->
+    <bean id="trigger2" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+        <property name="cronExpression" value="* * 2 L * ? "/>
+        <property name="jobDetail" ref="jobDetail2"/>
+    </bean>
+    <!--调度容器-->
+    <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="triggers">
+            <list>
+                <ref bean="trigger1"/>
+                <ref bean="trigger2"/>
+            </list>
+        </property>
+    </bean>
+
+</beans>
